@@ -163,13 +163,14 @@ for fn in files["in"] :
 		tree=etree.parse(open(fn),etree.HTMLParser())
 
 		data=[]
+		drows=0
 		props=fnmeta(fn)
 		props["file"]=os.path.split(fn)[1]
 		for (k,v) in parse["properties"].items() :
 			a=stringstring(extract(tree,v))
 			if a is not None:
 				props[k]=a
-		pprint.pprint(props)
+		#pprint.pprint(props)
 		for container in tree.xpath(parse["container"]) :
 			cdata=[]
 			for row in container.xpath(parse["row"]) :
@@ -197,12 +198,13 @@ for fn in files["in"] :
 		#		if not of:
 		#			rd.update({"file" : "o"})
 		#			cdata.append(output_row(rd,parse["table"]))
-					
+				
+			drows=drows+len(cdata)
 			data.append(cdata)
 	except Exception,e:
 		print "%s - error %s" % (fn,e) 
 	else :
-		print "%s - success - %s records" % (fn,len(data))
+		print "%s - success - %s tables, %s records" % (fn,len(data),drows)
 
 		# pprint.pprint(map(lambda a:  { "a" : a.get("reaction","-"), "b" : a.get("color",""), "c" : a.get("amendment","") },data));
 		for container in data :
