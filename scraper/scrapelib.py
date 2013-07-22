@@ -1,5 +1,10 @@
 from lxml import etree 
 from lxml.cssselect import CSSSelector, SelectorSyntaxError
+from lxml import etree
+
+
+
+
 
 import requests
 import re
@@ -60,14 +65,55 @@ class TextParser(AddToChain) :
 
 
 
+class ScrapedElement(etree.ElementBase) :
+	
+	def extract(self,a=None) : 
+		t=etree.tostring(self)
+		if type(a) == type("") :
+			a=TextParser([a])	
+		if a :
+			t=a(t)
+		return t
+		
+	def select(self,p) :
+		try :
+			sel=CSSSelector(p)
+			return sel(self)
+		except SelectorSyntaxError :
+			return self.xpath(p) 
+		
+	
+	def extract(self, **args) :
+		r={}
+		for (k,v) in args.items() :
+			vv=self.select(v)
+			if vv :
+				r[k]=vv
+		return r
+	
+	def __repr__(self) :
+		return self.extract()
+
+
+def myparser() :
+	parser_lookup = etree.ElementDefaultClassLookup(element=ScrapedElement)
+	parser = etree.HTMLParser()
+	parser.set_element_class_lookup(parser_lookup)
+	return parser
+
+
+
+
+
+
 class TreeScraper :
 	
 
 	def __init__(self, ss) :
 		if ss[0]=="<" :
-			self.tree=etree.fromstring(ss,etree.HTMLParser())
+			self.tree=etree.fromstring(ss,myparser())
 		else :
-			self.tree=etree.parse(url,etree.HTMLParser())
+			self.tree=etree.parse(ss,myparser())
 
 
 	def select(self,p) :
