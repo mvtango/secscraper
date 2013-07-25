@@ -36,10 +36,10 @@ class UnicodeWriter:
     which is encoded in the given encoding.
     """
 
-    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
+    def __init__(self, f, delimiter=";", encoding="utf-8", **kwds):
         # Redirect output to a queue
         self.queue = cStringIO.StringIO()
-        self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
+        self.writer = csv.writer(self.queue, delimiter=delimiter, **kwds)
         self.stream = f
         self.encoder = codecs.getincrementalencoder(encoding)()
 
@@ -61,3 +61,4 @@ class UnicodeWriter:
     def writerows(self, rows):
         for row in rows:
             self.writerow(row)
+

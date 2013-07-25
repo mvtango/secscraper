@@ -1,5 +1,11 @@
 from scraper.scrapelib import TreeScraper, TextEditor,TextParser
-ffn="""data/html/2012-07-27T14:12:40-04:00-0001160469-i00326_hyv-nq.htm
+import os
+
+_here=os.path.split(__file__)[0]
+
+output_dir="%s/output" % _here
+
+input_files="""data/html/2012-07-27T14:12:40-04:00-0001160469-i00326_hyv-nq.htm
 data/html/2012-08-27T16:02:09-04:00-0001398078-d383021dnq.htm
 data/html/2012-09-25T15:50:02-04:00-0001062805-d414908dnq.htm
 data/html/2012-09-25T15:50:05-04:00-0001062806-d414908dnq.htm
@@ -19,7 +25,6 @@ data/html/2013-03-01T13:04:07-05:00-0001100663-d488313dnq.htm
 data/html/2013-03-26T14:32:05-04:00-0001062806-d499607dnq.htm
 data/html/2013-03-26T14:37:07-04:00-0001320375-d499542dnq.htm
 data/html/2013-03-26T14:39:07-04:00-0001393299-d499614dnq.htm
-data/html/2013-03-26T14:48:13-04:00-0001062805-d499607dnq.htm
 data/html/2013-03-26T14:52:01-04:00-0001398078-d499637dnq.htm
 data/html/2013-03-26T14:52:04-04:00-0001280936-d499622dnq.htm
 data/html/2013-03-26T15:45:49-04:00-0000834237-e52578nq.htm
@@ -37,13 +42,14 @@ data/html/2013-06-27T15:18:35-04:00-0001100663-d555685dnq.htm"""
 datex=TextEditor([[r"^.*/(\d{4}-\d{2}-\d{2}).*$",r"\1"]])
 
 sharename=TextEditor([[r"[\r\n]+"," "],
-				      ["\s\s+"," " ],
-				      ["^\s"  ,  ""],
-					  ["\s$"  ,  ""],
-					  ["\s*\x97.*", "" ],
-					  ["\s*\x96.*","" ],
-					  ["^\xa0", "" ],
-					  [" *\(concluded\) *", "" ],
+				      [r"\s\s+"," " ],
+				      [r"^\s"  ,  ""],
+					  [r"\s$"  ,  ""],
+					  [r"\s*\x97.*", "" ],
+					  [r"\s*\x96.*","" ],
+					  [r"^\xa0", "" ],
+					  [r" *\(concluded\) *", "" ],
+					  [r" *\(continued\) *", "" ],
 					  ])
 					  
 
@@ -74,7 +80,7 @@ def parsefile(fn) :
         return res
 
 rr=[]
-for f in ffn.split("\n") :
+for f in input_files.split("\n")[:5] :
     try :
         n=parsefile(f)
         if len(n)>0 :
@@ -89,14 +95,14 @@ for f in ffn.split("\n") :
 import simplejson,string
 
 rr_germany=filter(lambda a : string.lower("%(category)s %(share)s" % a).find("germany")>-1,rr)
-simplejson.dump(rr,open("data/resultate-runde2.json","w"))
-simplejson.dump(rr_germany,open("resultate-runde2-germany.json","w"))
+simplejson.dump(rr,open(os.path.join(output_dir,"resultate-runde2.json"),"w"))
+simplejson.dump(rr_germany,open(os.path.join(output_dir,"resultate-runde2-germany.json"),"w"))
 
 from unicodecsv import UnicodeWriter
 
-uw=UnicodeWriter(open("data/resultate-runde2.csv","w"),delimiter=";")
-uw.writerows(map(lambda a: [a["date"],a["category"],a["share"],a["number"],a["price"],a["file"]], rr))
+uw=UnicodeWriter(open(os.path.join(output_dir,"resultate-runde2.csv"),"w"),delimiter=";")
+uw.writerows(map(lambda a: [a["date"],a["category"],a.get("fund",""),a["share"],a["number"],a["price"],a["file"]], rr))
 
-uw=UnicodeWriter(open("data/resultate-runde2-germany.csv","w"),delimiter=";")
-uw.writerows(map(lambda a: [a["date"],a["category"],a["share"],a["number"],a["price"],a["file"]], rr_germany))
+uw=UnicodeWriter(open(os.path.join(output_dir,"resultate-runde2-germany.csv"),"w"),delimiter=";")
+uw.writerows(map(lambda a: [a["date"],a["category"],a.get("fund",""),a["share"],a["number"],a["price"],a["file"]], rr_germany))
 
