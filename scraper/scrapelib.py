@@ -108,6 +108,8 @@ class ScrapedElement(etree.ElementBase) :
 			return sel(self)
 		except SelectorSyntaxError :
 			return self.xpath(p) 
+		except AssertionError :
+			return self.xpath(p) 
 		
 	
 	def extract(self, **args) :
@@ -115,7 +117,10 @@ class ScrapedElement(etree.ElementBase) :
 		for (k,v) in args.items() :
 			vv=self.select(v)
 			if vv :
-				r[k]=vv
+				if len(vv)==1 :
+					r[k]=vv[0]
+				else :
+					r[k]=vv
 		return r
 	
 	def __repr__(self) :
@@ -132,7 +137,7 @@ def myparser() :
 class TreeScraper :
 	
 	def __init__(self, ss) :
-		if ss[0]=="<" :
+		if type(ss) in types.StringTypes and len(ss)>0 and ss[0]=="<" :
 			self.tree=etree.fromstring(ss,myparser())
 		else :
 			self.tree=etree.parse(ss,myparser())
@@ -144,15 +149,29 @@ class TreeScraper :
 			return sel(self.tree)
 		except SelectorSyntaxError :
 			return self.tree.xpath(p) 
+		except AssertionError :
+			return self.tree.xpath(p) 
 
-
-	def extract(self,xp,**args) :
+	def extract(self,*args,**kwargs) :
+		""" with select expression as first arg: returns array of match dicts, without: returns match dicts"""
 		r=[]
-		for e in self.select(xp) :
-			if hasattr(e,"extract") :
-				e=e.extract(**args)
-			r.append(e) 
-		return r
+		if len(args) == 1 :
+			for e in self.select(args[0]) :
+				if hasattr(e,"extract") :
+					e=e.extract(**kwargs)
+				r.append(e)
+			return r
+		else :
+			if len(args)==0 :
+				r=self.tree.getroot()
+				if hasattr(r,"extract") :
+					return r.extract(**kwargs)
+				else :
+					return {} 
+			else :
+				raise(TypeError,"extract() takes 0 or 1 arguments + keyword arguments, got %s" % len(args))
+				
+			
 		
 
 
